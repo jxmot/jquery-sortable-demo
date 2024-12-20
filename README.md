@@ -57,7 +57,7 @@ It takes the form of a grid or column of image thumbnails where you can -
 
 After obtaining a copy of the files in this repository you only need to open `sortable.html` in any *desktop* browser. 
 
-Then you can grab any of the thumbnails with you mouse and move them to a new position. Once moved the position numbers are updated to give you an indication of the order.
+Then you can grab any of the thumbnails *one at a time* with you mouse and move them to a new position. Once moved the position numbers are updated to give you an indication of the order.
 
 You can also delete any of the thumbnails and restore them by either clicking "Restore Deleted Items" *or* by changing to "Numbered Tiles" or "Images".
 
