@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Demonstration - jQuery UI Sortable, TailwindCSS, HTML templates, and AlpineJS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.5/cdn.js"></script>
+    <!-- DO NOT use TailwindCSS like this for production! -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.3/jquery-ui.min.js"></script>
+    <style>
+        .content-box {
+            /* --tw-bg-opacity: 1; */
+            background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+            /* --tw-text-opacity: 1; */
+            color: rgb(15 23 42 / var(--tw-text-opacity, 1));
+            --tw-shadow: 0px 1px 4px rgba(26, 26, 26, 0.24);
+            /* --tw-shadow-colored: 0px 1px 4px var(--tw-shadow-color); */
+            box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+            border-radius: 0.375rem;
+            padding: 1rem;
+            /* margin-bottom: 2rem; */
+        }
+        .media-item {
+            border-style: solid;
+            border-width: 1px;
+            --tw-border-opacity: 1;
+            border-color: rgb(203 213 225 / var(--tw-border-opacity, 1));
+            border-radius: 0.375rem;
+            padding: 0.375rem;
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+        }
+        button[disabled] {
+            cursor: default !important;
+            transition: none !important;
+            background-color: #7e7e7e !important;
+            color: lightgray !important;
+            border-color: lightgray !important;
+        }
+    </style>
+</head>
+<body style="background-color:grey;">
+<div class="w-3/5" style="margin:auto;">
+    <div id="demo-controls" class="content-box mt-4 mb-4">
+        <div class="grid grid-flow-col grid-cols-3 gap-4">
+            <div class="grid grid-flow-row gap-4">
+                <div>
+                    <input checked id="layout" name="layout" type="checkbox">
+                    <label for="layout">Grid Layout</label>
+                </div>
+                <div>
+                    <input checked type="radio" id="show-tiles" name="thumbpick" value="tile">
+                    <label class="mr-6" for="show-tiles">Numbered Tiles</label>
+                    <input type="radio" id="show-imgs" name="thumbpick" value="img">
+                    <label for="show-imgs">Images</label>
+                </div>
+            </div>
+            <div></div>
+            <div>
+                <button disabled id="restore-items" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Restore Deleted Items</button>
+            </div>
+        </div>
+    </div>
+    <div id="sortable" class="content-box mt-4 grid grid-flow-row grid-cols-6 gap-4 flex-grow mb-4">
+    </div>
+</div>
+<template id="item-template">
+    <div id="" class="item-container cursor-grab" 
+         title="Drag This Item To A New Position"
+         x-data="{hover:false}" @mouseenter="hover=true" @mouseleave="hover=false">
+        <div class="media-item shadow-lg">
+            <div class="relative w-full h-24 bg-contain bg-no-repeat bg-center">
+                <div class="z-0 absolute inset-0 flex flex-row justify-center">
+                    <img style="max-width:100px;" class="self-center item-img" src="">
+                </div>
+                <div class="item-seqnumb flex justify-center test-sm w-6 h-6 absolute top-1 left-1 inline-block rounded-full border-black border-2 border-solid text-black bg-white shadow-md">
+                    <span class="text-sm">0</span>
+                </div>
+                <div class="item-delete opacity-50 hover:opacity-100 cursor-pointer flex justify-center test-sm w-6 h-6 absolute top-1 right-1 inline-block rounded-full border-white border-2 border-solid text-white bg-red-600 shadow-md" 
+                     title="Delete This Item"
+                     x-show="hover"
+                     style="display: none;">
+                    <i class="text-sm fas fa-trash-alt"></i>
+                </div>
+                <div class="item-view opacity-50 hover:opacity-100 cursor-pointer flex justify-center test-sm w-6 h-6 absolute bottom-1 right-1 inline-block rounded-full border-white border-2 border-solid text-white bg-blue-600 shadow-md" 
+                     title="View This Item"
+                     x-show="hover"
+                     style="display: none;">
+                    <i class="text-sm fas fa-eye"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    $( function() {
+        const MAX_ITEMS = 21;
+
+        let demoImgType = 'tile';
+
+        const reSequence = () => {
+            $('#sortable .item-img').each((ix, img) => {
+                img.dataset.seqnumb = ix;
+            });
+            $('#sortable .item-seqnumb span').each((ix, seqn) => {
+                seqn.innerText = ix+1;
+            });
+        };
+
+        const addItem = (id, newItem, type = 'tile') => {
+            newItem.id = 'item-'+id;
+            if(type === 'tile') {
+                newItem.querySelector('.item-img').src = 'assets/tiles/tile-'+id+'.png';
+            } else {
+                newItem.querySelector('.item-img').src = 'assets/img/img-'+id+'.jpg';
+            }
+            newItem.querySelector('.item-delete').dataset.id = id;
+            if($('#layout')[0].checked) {
+                newItem.classList.remove('w-1/6');
+            } else {
+                newItem.classList.add('w-1/6');
+            }
+            document.querySelector('#sortable').append(newItem);
+        };
+
+        const item = document.getElementById('item-template').content.querySelector('.item-container');
+
+        let deleted = [];
+        const restoreDel = () => {
+            deleted.sort((a, b) => a - b);
+            deleted.forEach((toRest) => {
+                let newItem = document.importNode(item, true);
+                addItem(toRest, newItem, demoImgType);
+            });
+            $('#sortable').sortable('refreshPositions');
+            reSequence();
+            deleted = [];
+            $('#restore-items')[0].disabled = true;
+            setUpDelete();
+        };
+
+        const showAllNew = () => {
+            for(i = 1; i < MAX_ITEMS; i++) {
+                let newItem = document.importNode(item, true);
+                addItem(i, newItem, demoImgType);
+            }
+            reSequence();
+        };
+
+        $('#sortable').sortable({
+            containment: 'parent',
+            tolerance: 'pointer',
+            start: ( event, ui ) => { 
+                ui.helper.addClass('cursor-grabbing');
+                ui.helper.removeClass('cursor-grab');
+            },
+            stop: ( event, ui ) => {
+                $('#'+ui.item[0].id).removeClass('cursor-grabbing');
+                $('#'+ui.item[0].id).addClass('cursor-grab');
+                console.log($('#sortable').sortable('toArray'));
+                reSequence();
+            },
+        });
+        // don't allow text to be accidently selected while dragging
+        $('#sortable').disableSelection();
+
+        // switch between grid & column demo
+        const gridOrCol = (goc) => {
+            if(goc) {
+                $('#sortable').addClass('grid-cols-6');
+                $('#sortable').removeClass('place-items-center');
+                $('.item-container').removeClass('w-1/6');
+            } else {
+                $('#sortable').removeClass('grid-cols-6');
+                $('#sortable').addClass('place-items-center');
+                $('.item-container').addClass('w-1/6');
+            }
+        };
+        const tileOrImg = (toi = true) => {
+            if(toi) {
+                demoImgType = 'tile';
+            } else {
+                demoImgType = 'img';
+            }
+            $('#sortable').empty();
+            showAllNew();
+            setUpDelete();
+        };
+        $('#layout').on('change', (ev) => {
+            gridOrCol(ev.target.checked);
+        });
+        $('input[type=radio]').on('change', (ev) => {
+            console.log(ev.target.id);
+            let showTiles = true;
+            if(ev.target.value === 'img') {
+                showTiles = false;
+            }
+            tileOrImg(showTiles);
+        });
+
+
+        const delItem = (id) => {
+            if(id !== 'UNKWN') {
+                document.getElementById('item-'+id).remove();
+                deleted.push(parseInt(id));
+                $('#restore-items')[0].disabled = false;
+                $('#sortable').sortable('refreshPositions');
+            }
+            reSequence();
+            console.log('del '+id);
+        };
+
+        const setUpDelete = () => {
+            deleted = [];
+            $('#restore-items')[0].disabled = true;
+            $('.item-delete').off('click');
+            $('.item-delete').on('click', (ev) => {
+                const delId = ev.target.dataset.id ?? ev.target.parentElement.dataset.id ?? 'UNKWN';
+                // get out of this element's event handler before we delete it
+                setTimeout(delItem.bind(null, delId), 100);
+            });
+        };
+
+        $('#restore-items').on('click', (ev) => {
+            restoreDel();
+            reSequence();
+            setUpDelete();
+        });
+
+        showAllNew();
+        setUpDelete();
+    });
+</script>
+</body>
+</html>
