@@ -16,6 +16,7 @@ It takes the form of a grid or column of image thumbnails where you can -
 * Delete & recover thumbnails
 
 
+<br><br>
 <div align="center">
     <figure>
         <img src="./mdimg/sshot-1.png" style="width:50%;border: 2px solid black"; alt="Grid Layout - Tile Images<" txt="Desktop Screenshot"/>
