@@ -61,5 +61,7 @@ Then you can grab any of the thumbnails with you mouse and move them to a new po
 
 You can also delete any of the thumbnails and restore them by either clicking "Restore Deleted Items" *or* by changing to "Numbered Tiles" or "Images".
 
+**NOTE:** This repo does not contain any images from <a href="https://picsum.photos/" target="_blank">Picsum</a>. To obtain them go to the `assets/img` folder and run the `grabimg.sh` script. It uses `curl` to dowwload 20 300x300 pixel images.
+
 
 
