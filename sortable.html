@@ -93,6 +93,7 @@
                 </div>
             </div>
         </div>
+        <div class="item-title text-xs text-center -bottom-1"></div>
     </div>
 </template>
 <script>
@@ -112,11 +113,15 @@
 
         const addItem = (id, newItem, type = 'tile') => {
             newItem.id = 'item-'+id;
+            let title = '';
             if(type === 'tile') {
                 newItem.querySelector('.item-img').src = 'assets/tiles/tile-'+id+'.png';
+                title = 'tile-'+id+'.png';
             } else {
                 newItem.querySelector('.item-img').src = 'assets/img/img-'+id+'.jpg';
+                title = 'img-'+id+'.jpg';
             }
+            newItem.querySelector('.item-title').innerText = title;
             newItem.querySelector('.item-delete').dataset.id = id;
             if($('#layout')[0].checked) {
                 newItem.classList.remove('w-1/6');
